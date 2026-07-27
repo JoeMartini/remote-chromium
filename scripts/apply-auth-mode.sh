@@ -2,6 +2,11 @@
 # 切换 Remote Chromium 反代鉴权模式：basic 或 oidc
 set -euo pipefail
 
+# 切换到项目根目录
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_DIR"
+
 # 加载环境变量
 if [ -f .env ]; then
     set -a
@@ -10,13 +15,18 @@ if [ -f .env ]; then
     set +a
 fi
 
-WORK_DIR="${SERVER_BROWSER_WORK_DIR:-$HOME/remote-chromium}"
-CONFIG_DIR="${CHROME_CONFIG_DIR:-$WORK_DIR/configs}"
+CONFIG_DIR="./configs"
 AUTH_MODE="${AUTH_MODE:-basic}"
 
-# OpenResty 容器名（可通过 .env 覆盖）
-OR_CONTAINER="${OPENRESTY_CONTAINER:-1Panel-openresty-DrBW}"
+# OpenResty 容器名（在 .env 中设置 OPENRESTY_CONTAINER）
+OR_CONTAINER="${OPENRESTY_CONTAINER:-}"
 OR_CONF_DIR="/usr/local/openresty/nginx/conf/conf.d"
+
+if [ -z "$OR_CONTAINER" ]; then
+    echo "[apply-auth-mode] ERROR: OPENRESTY_CONTAINER is not set."
+    echo "  Set it in .env, e.g.: OPENRESTY_CONTAINER=your-openresty-container-name"
+    exit 1
+fi
 
 case "$AUTH_MODE" in
   basic)

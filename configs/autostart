@@ -8,26 +8,44 @@ export LIBGL_ALWAYS_SOFTWARE=1
 # Paths
 CONFIG_DIR=/config
 CHROME_USER_DATA="$CONFIG_DIR/chromium"
-EXTENSIONS_DIR="${EXTENSIONS_DIR:-/opt/extensions}"
 CDP_PORT="${CHROMIUM_CDP_PORT:-9222}"
 CDP_PROXY_PORT="${CHROMIUM_CDP_PROXY_PORT:-9224}"
+BUILD_TIME_EXT_DIR="/opt/extensions"
+RUNTIME_EXT_DIR="${EXTENSIONS_DIR:-/config/extensions}"
 
-# Scan all subdirectories under /config/extensions and /opt/extensions for Chrome extensions
-# Each extension directory must contain a manifest.json
+# Scan for Chrome extensions (each subdirectory must contain manifest.json)
+# Priority: runtime-mounted extensions > build-time extensions
+# Deduplicate by extension name (directory basename)
+declare -A SEEN_EXTS
 EXT_PATHS=""
-for base_dir in "$CONFIG_DIR/extensions" "$EXTENSIONS_DIR"; do
-    if [ -d "$base_dir" ]; then
-        for sub in "$base_dir"/*/; do
-            if [ -f "${sub}manifest.json" ]; then
+
+scan_extensions() {
+    local base_dir="$1"
+    if [ ! -d "$base_dir" ]; then
+        return
+    fi
+    for sub in "$base_dir"/*/; do
+        if [ -f "${sub}manifest.json" ]; then
+            local name
+            name="$(basename "${sub%/}")"
+            if [ -z "${SEEN_EXTS[$name]:-}" ]; then
+                SEEN_EXTS["$name"]=1
                 if [ -z "$EXT_PATHS" ]; then
                     EXT_PATHS="${sub%/}"
                 else
                     EXT_PATHS="$EXT_PATHS,${sub%/}"
                 fi
+            else
+                echo "[autostart] Skipping duplicate extension: $name (already loaded)"
             fi
-        done
-    fi
-done
+        fi
+    done
+}
+
+# Runtime-mounted extensions take priority
+scan_extensions "$RUNTIME_EXT_DIR"
+# Build-time extensions as fallback
+scan_extensions "$BUILD_TIME_EXT_DIR"
 
 if [ -z "$EXT_PATHS" ]; then
     echo "[autostart] Warning: no Chrome extensions found, starting Chromium without extensions"

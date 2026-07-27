@@ -112,14 +112,18 @@ const browser = await puppeteer.connect({
 
 ## 加载自定义扩展
 
-将扩展解压到 `./extensions/<name>/`，在 `.env` 中配置：
+将扩展解压到 `./extensions/<name>/`，每个子目录需包含 `manifest.json`。容器启动时自动扫描加载所有扩展。
 
 ```bash
-# 多个扩展用冒号分隔
-CHROME_EXTENSIONS_DIR=./extensions/opencli-webstore:./extensions/ublock
+# 示例目录结构：
+# extensions/
+# ├── opencli-webstore/   # OpenCLI Browser Bridge
+# │   └── manifest.json
+# └── ublock/             # uBlock Origin
+#     └── manifest.json
 ```
 
-扩展 ID 需要与 `configs/managed_policies.json` 中的 `ExtensionInstallForcelist` 匹配（如果要强制安装）。
+如需通过 Chrome 策略强制安装扩展（而非 `--load-extension`），编辑 `configs/managed_policies.json`，替换为你的扩展 ID。默认配置的扩展 ID `ildkmabpimmkaediidaifkhjpohdnifk` 是 OpenCLI Browser Bridge，不使用 OpenCLI 时可清空或替换。
 
 ## 核心文件
 
@@ -143,6 +147,7 @@ CHROME_EXTENSIONS_DIR=./extensions/opencli-webstore:./extensions/ublock
 | `docs/REVERSE_PROXY.md` | 反向代理配置指南 |
 | `docs/OIDC.md` | OIDC 认证指南 |
 | `docs/TROUBLESHOOTING.md` | 常见问题排查 |
+| `docs/AGENT_INTEGRATION.md` | Agent/Skill 集成指南 |
 
 ## 目录结构
 
@@ -168,7 +173,8 @@ remote-chromium/
 │   ├── DEPLOYMENT.md
 │   ├── OIDC.md
 │   ├── REVERSE_PROXY.md
-│   └── TROUBLESHOOTING.md
+│   ├── TROUBLESHOOTING.md
+│   └── AGENT_INTEGRATION.md
 ├── docker-compose.yml
 ├── LICENSE
 └── README.md

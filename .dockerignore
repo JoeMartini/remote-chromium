@@ -1,0 +1,10 @@
+.git
+.env
+config/
+*.log
+oauth2-proxy.env
+*.secret
+docs/
+examples/
+*.md
+!extensions/.gitkeep

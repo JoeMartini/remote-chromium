@@ -2,6 +2,11 @@
 # 启动 Remote Chromium 容器
 set -euo pipefail
 
+# 切换到项目根目录（脚本所在目录的上一级）
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_DIR"
+
 # 加载环境变量
 if [ -f .env ]; then
     set -a

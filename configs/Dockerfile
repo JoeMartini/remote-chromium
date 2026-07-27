@@ -24,7 +24,9 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 # Chrome 扩展和管理策略
-# 构建时从 build context 的 extensions/ 目录复制
+# 扩展在运行时通过 volume 挂载到 /config/extensions/（主渠道）
+# 构建时也从 build context 的 extensions/ 复制到 /opt/extensions/ 作为 fallback
+# 注意：build context 的 extensions/ 目录必须存在（仓库内有 .gitkeep 占位）
 COPY extensions/ /opt/extensions/
 COPY configs/managed_policies.json /etc/chromium/policies/managed/managed_policies.json
 
