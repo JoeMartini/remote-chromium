@@ -1,0 +1,75 @@
+#!/bin/bash
+# KasmVNC openbox autostart for Remote Chromium
+set -u
+
+export DISPLAY="${DISPLAY:-:1}"
+export LIBGL_ALWAYS_SOFTWARE=1
+
+# Paths
+CONFIG_DIR=/config
+CHROME_USER_DATA="$CONFIG_DIR/chromium"
+EXTENSIONS_DIR="${EXTENSIONS_DIR:-/opt/extensions}"
+CDP_PORT="${CHROMIUM_CDP_PORT:-9222}"
+CDP_PROXY_PORT="${CHROMIUM_CDP_PROXY_PORT:-9224}"
+
+# Scan all subdirectories under /config/extensions and /opt/extensions for Chrome extensions
+# Each extension directory must contain a manifest.json
+EXT_PATHS=""
+for base_dir in "$CONFIG_DIR/extensions" "$EXTENSIONS_DIR"; do
+    if [ -d "$base_dir" ]; then
+        for sub in "$base_dir"/*/; do
+            if [ -f "${sub}manifest.json" ]; then
+                if [ -z "$EXT_PATHS" ]; then
+                    EXT_PATHS="${sub%/}"
+                else
+                    EXT_PATHS="$EXT_PATHS,${sub%/}"
+                fi
+            fi
+        done
+    fi
+done
+
+if [ -z "$EXT_PATHS" ]; then
+    echo "[autostart] Warning: no Chrome extensions found, starting Chromium without extensions"
+    EXT_FLAG=""
+else
+    echo "[autostart] Loading extensions: $EXT_PATHS"
+    EXT_FLAG="--load-extension=$EXT_PATHS"
+fi
+
+# Launch socat to expose CDP from localhost:CDP_PORT to 0.0.0.0:CDP_PROXY_PORT
+# Modern Chromium binds CDP to 127.0.0.1 only; we need a proxy for external access.
+/opt/socat-cdp.sh "$CDP_PORT" "$CDP_PROXY_PORT" &
+
+# Chromium launch flags
+CHROME_FLAGS="
+    --no-sandbox
+    --no-first-run
+    --no-default-browser-check
+    --start-maximized
+    --password-store=basic
+    --disable-gpu
+    --disable-background-networking
+    --user-data-dir=$CHROME_USER_DATA
+    --remote-debugging-port=$CDP_PORT
+    --remote-allow-origins=*
+    --lang=zh-CN
+"
+
+if [ -n "$EXT_FLAG" ]; then
+    CHROME_FLAGS="$CHROME_FLAGS $EXT_FLAG"
+fi
+
+# Keep window from being minimized (same trick as WechatOnCloud)
+(
+    while sleep 2; do
+        all=$(xdotool search --name '.+' 2>/dev/null) || continue
+        vis=$(xdotool search --onlyvisible --name '.+' 2>/dev/null)
+        for w in ${all}; do
+            printf '%s\n' "${vis}" | grep -qx "${w}" || xdotool windowactivate "${w}" 2>/dev/null || true
+        done
+    done
+) &
+
+echo "[autostart] Starting Chromium with flags: $CHROME_FLAGS"
+exec /usr/bin/chromium $CHROME_FLAGS

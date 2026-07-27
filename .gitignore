@@ -1,0 +1,6 @@
+.env
+config/
+extensions/
+*.log
+oauth2-proxy.env
+*.secret
