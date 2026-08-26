@@ -27,6 +27,8 @@ KASM_PORT="${KASM_HTTP_PORT:-3800}"
 KASM_HTTPS_PORT="${KASM_HTTPS_PORT:-3801}"
 CDP_PORT="${CHROME_CDP_PORT:-9222}"
 CDP_PROXY_PORT="${CHROME_CDP_PROXY_PORT:-9224}"
+CDP_PROXY_BIND="${CDP_PROXY_BIND:-127.0.0.1}"
+CHROME_CDP_ALLOW_ORIGINS="${CHROME_CDP_ALLOW_ORIGINS:-}"
 PUID="${PUID:-1000}"
 PGID="${PGID:-1000}"
 TZ="${TZ:-Asia/Shanghai}"
@@ -66,6 +68,8 @@ docker run -d --name "$CONTAINER_NAME" \
   -e CUSTOM_HTTPS_PORT="$KASM_HTTPS_PORT" \
   -e CHROMIUM_CDP_PORT="$CDP_PORT" \
   -e CHROMIUM_CDP_PROXY_PORT="$CDP_PROXY_PORT" \
+  -e CDP_PROXY_BIND="$CDP_PROXY_BIND" \
+  -e CHROME_CDP_ALLOW_ORIGINS="$CHROME_CDP_ALLOW_ORIGINS" \
   -e EXTENSIONS_DIR=/config/extensions \
   -v "$CONFIG_DIR:/config" \
   -v "$EXTENSIONS_DIR:/config/extensions:ro" \
@@ -104,9 +108,14 @@ if [ "$AUTH_MODE" == "oidc" ]; then
 fi
 
 echo ""
-echo "KasmVNC UI: http://localhost:$KASM_PORT/"
-echo "CDP proxy:  http://localhost:$CDP_PROXY_PORT"
+echo "KasmVNC UI: http://localhost:$KASM_PORT/  (configure reverse proxy for external access)"
+echo "CDP proxy:  http://localhost:$CDP_PROXY_PORT  (bound to ${CDP_PROXY_BIND})"
 echo "Auth mode:  $AUTH_MODE"
+echo ""
+echo "⚠  Security reminder:"
+echo "  - KasmVNC port $KASM_PORT has no built-in auth; use the reverse proxy for all external access."
+echo "  - CDP port $CDP_PROXY_PORT is bound to ${CDP_PROXY_BIND}. Do not expose it to untrusted networks."
+echo "  - Configure firewall (ufw/iptables) to drop direct access to $KASM_PORT, $KASM_HTTPS_PORT, $CDP_PORT, $CDP_PROXY_PORT."
 echo ""
 echo "Usage:"
 echo "  export CDP_ENDPOINT=http://localhost:$CDP_PROXY_PORT"
@@ -117,3 +126,4 @@ echo "  opencli doctor"
 echo ""
 echo "  # Puppeteer:"
 echo "  # browserWSEndpoint: 'ws://localhost:$CDP_PROXY_PORT'"
+echo ""
