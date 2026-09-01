@@ -34,6 +34,7 @@ PGID="${PGID:-1000}"
 TZ="${TZ:-Asia/Shanghai}"
 SHM_SIZE="${CHROME_SHM_SIZE:-1gb}"
 AUTH_MODE="${AUTH_MODE:-basic}"
+OAUTH2_PROXY_VERSION="${OAUTH2_PROXY_VERSION:-v7.7.1}"
 
 mkdir -p "$CONFIG_DIR/chromium"
 mkdir -p "$EXTENSIONS_DIR"
@@ -61,6 +62,7 @@ echo "Starting container $CONTAINER_NAME..."
 docker run -d --name "$CONTAINER_NAME" \
   --network host \
   --log-driver json-file --log-opt max-size=10m --log-opt max-file=3 \
+  --security-opt no-new-privileges:true \
   -e PUID="$PUID" \
   -e PGID="$PGID" \
   -e TZ="$TZ" \
@@ -100,9 +102,10 @@ if [ "$AUTH_MODE" == "oidc" ]; then
     docker run -d --name "$OAUTH2_PROXY_CONTAINER" \
       --network host \
       --log-driver json-file --log-opt max-size=10m --log-opt max-file=3 \
+      --security-opt no-new-privileges:true \
       --env-file "$OAUTH2_PROXY_ENV" \
       --restart=unless-stopped \
-      quay.io/oauth2-proxy/oauth2-proxy:latest
+      quay.io/oauth2-proxy/oauth2-proxy:"$OAUTH2_PROXY_VERSION"
 
     echo "OAuth2-Proxy started."
 fi
