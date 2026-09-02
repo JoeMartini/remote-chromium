@@ -1,0 +1,61 @@
+/*
+ * KasmVNC Web UI 精简样式
+ * 隐藏多余操作栏按钮，只保留：Clipboard / Fullscreen / Settings / Keys
+ * 隐藏项：
+ *   - Drag Viewport（桌面已全屏，不需要拖动视口）
+ *   - Power（禁止关机/重启，防止误操作）
+ *   - Displays（单显示器，不需要多屏管理）
+ *   - Game Cursor Mode（非游戏场景）
+ *   - Disconnect（通过浏览器关闭标签页即可）
+ *   - KasmVNC Logo（精简空间）
+ *   - Settings 中的高级项（WebRTC/WebP/性能统计等用户不需要的选项）
+ */
+
+/* 隐藏不需要的侧栏按钮 */
+#noVNC_view_drag_button,
+#noVNC_view_drag_button + *,
+#noVNC_power_button,
+#noVNC_power_button + *,
+#noVNC_displays_button,
+#noVNC_displays_button + *,
+#noVNC_game_mode_button,
+#noVNC_game_mode_button + *,
+#noVNC_disconnect_button {
+  display: none !important;
+}
+
+/* 隐藏 KasmVNC Logo */
+.noVNC_logo {
+  display: none !important;
+}
+
+/* 隐藏 Settings 面板中不需要的高级选项 */
+#noVNC_setting_enable_webrtc,
+#noVNC_setting_enable_webrtc + *,
+#noVNC_setting_enable_webp,
+#noVNC_setting_enable_webp + *,
+#noVNC_setting_enable_perf_stats,
+#noVNC_setting_enable_perf_stats + *,
+#noVNC_setting_pointer_lock,
+#noVNC_setting_pointer_lock + *,
+#noVNC_setting_translate_shortcuts,
+#noVNC_setting_translate_shortcuts + *,
+#noVNC_setting_view_only,
+#noVNC_setting_view_only + *,
+#noVNC_setting_shared,
+#noVNC_setting_shared + * {
+  display: none !important;
+}
+
+/* 隐藏 Stream Quality / Advanced 折叠区域 */
+.noVNC_expander {
+  display: none !important;
+}
+
+/* 精简控制条间距，侧栏更紧凑 */
+#noVNC_control_bar .noVNC_button_div {
+  margin-top: 4px;
+}
+
+/* 默认开启 Clipboard Seamless（双向剪贴板同步） */
+/* 通过 CSS 设置 checkbox 的视觉状态不够，还需 JS 配合 */
